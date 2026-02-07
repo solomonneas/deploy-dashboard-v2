@@ -1,0 +1,1963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280, initial-scale=1">
+<title>Deploy Dashboard v2 — Project Control Center</title>
+<style>
+/* ============================================
+   Deploy Dashboard v2
+   Project Monitoring & Deployment Control Center
+   Author: Solomon Neas
+   ============================================ */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-card-hover: #22272e;
+  --bg-input: #0d1117;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --border: #30363d;
+  --border-light: #21262d;
+  --accent: #58a6ff;
+  --success: #3fb950;
+  --danger: #f85149;
+  --warning: #d29922;
+  --info: #58a6ff;
+  --purple: #bc8cff;
+  --cat-security: #f85149;
+  --cat-infrastructure: #58a6ff;
+  --cat-devtools: #3fb950;
+  --cat-fun: #bc8cff;
+  --font-mono: 'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  --radius: 6px;
+  --radius-lg: 10px;
+  --transition: 0.2s ease;
+  --shadow: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.4);
+  --glow-none: none;
+  --card-border-width: 1px;
+  --header-bg: var(--bg-secondary);
+}
+
+/* Theme: Terminal (default) */
+.theme-terminal {
+  --bg-primary: #0d1117;
+  --bg-secondary: #161b22;
+  --bg-card: #1c2128;
+  --bg-card-hover: #22272e;
+  --bg-input: #0d1117;
+  --text-primary: #c9d1d9;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --border: #30363d;
+  --accent: #58a6ff;
+  --font-body: var(--font-mono);
+}
+
+/* Theme: Mission Control */
+.theme-mission {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --bg-input: #0f172a;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border: #334155;
+  --accent: #38bdf8;
+  --success: #4ade80;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --font-body: var(--font-sans);
+  --header-bg: #0c1322;
+}
+
+/* Theme: Notebook */
+.theme-notebook {
+  --bg-primary: #fefce8;
+  --bg-secondary: #fef9c3;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fefce8;
+  --bg-input: #ffffff;
+  --text-primary: #1c1917;
+  --text-secondary: #57534e;
+  --text-muted: #a8a29e;
+  --border: #e7e5e4;
+  --border-light: #f5f5f4;
+  --accent: #2563eb;
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #ca8a04;
+  --cat-security: #dc2626;
+  --cat-infrastructure: #2563eb;
+  --cat-devtools: #16a34a;
+  --cat-fun: #9333ea;
+  --font-body: var(--font-sans);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.1);
+  --header-bg: #fffbeb;
+}
+
+/* Theme: Circuit Board */
+.theme-circuit {
+  --bg-primary: #1a1a2e;
+  --bg-secondary: #16213e;
+  --bg-card: #0f3460;
+  --bg-card-hover: #1a4a7a;
+  --bg-input: #1a1a2e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0b0;
+  --text-muted: #707080;
+  --border: #0f3460;
+  --accent: #e94560;
+  --success: #00ff41;
+  --danger: #e94560;
+  --warning: #f5a623;
+  --font-body: var(--font-mono);
+  --header-bg: #0a0a1a;
+}
+
+/* Theme: Glassmorphism */
+.theme-glass {
+  --bg-primary: #1e1b4b;
+  --bg-secondary: rgba(49, 46, 129, 0.6);
+  --bg-card: rgba(255,255,255,0.08);
+  --bg-card-hover: rgba(255,255,255,0.12);
+  --bg-input: rgba(0,0,0,0.3);
+  --text-primary: #e0e7ff;
+  --text-secondary: #a5b4fc;
+  --text-muted: #6366f1;
+  --border: rgba(255,255,255,0.15);
+  --accent: #818cf8;
+  --success: #34d399;
+  --danger: #fb7185;
+  --warning: #fbbf24;
+  --font-body: var(--font-sans);
+  --shadow: 0 4px 30px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.4);
+  --header-bg: rgba(30, 27, 75, 0.8);
+}
+
+html { font-size: 14px; }
+
+body {
+  font-family: var(--font-body, var(--font-mono));
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background var(--transition), color var(--transition);
+}
+
+.theme-glass body,
+body.theme-glass-bg {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%);
+  background-attachment: fixed;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ---- HEADER ---- */
+.header {
+  background: var(--header-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+
+.header-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.header-title .icon { font-size: 1.4rem; }
+
+.header-stats {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+}
+
+.stat-pill .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.stat-pill .dot.green { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.stat-pill .dot.red { background: var(--danger); }
+.stat-pill .dot.yellow { background: var(--warning); animation: pulse-glow 2s infinite; }
+.stat-pill .dot.blue { background: var(--info); }
+
+.header-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.btn {
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all var(--transition);
+  white-space: nowrap;
+}
+
+.btn:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
+.btn.btn-success { border-color: var(--success); color: var(--success); }
+.btn.btn-success:hover { background: rgba(63,185,80,0.15); }
+.btn.btn-danger { border-color: var(--danger); color: var(--danger); }
+.btn.btn-danger:hover { background: rgba(248,81,73,0.15); }
+.btn.btn-accent { border-color: var(--accent); color: var(--accent); }
+.btn.btn-accent:hover { background: rgba(88,166,255,0.15); }
+.btn.btn-sm { padding: 3px 8px; font-size: 0.72rem; }
+.btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.theme-switcher {
+  display: flex;
+  gap: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2px;
+  background: var(--bg-primary);
+}
+
+.theme-btn {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  position: relative;
+}
+
+.theme-btn:hover { transform: scale(1.15); }
+.theme-btn.active { border-color: var(--text-primary); box-shadow: 0 0 4px rgba(255,255,255,0.3); }
+
+.theme-btn[data-theme="terminal"] { background: #0d1117; }
+.theme-btn[data-theme="mission"] { background: #0f172a; }
+.theme-btn[data-theme="notebook"] { background: #fefce8; }
+.theme-btn[data-theme="circuit"] { background: linear-gradient(135deg, #1a1a2e, #e94560); }
+.theme-btn[data-theme="glass"] { background: linear-gradient(135deg, #1e1b4b, #312e81); }
+
+.auto-refresh-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.auto-refresh-toggle .countdown {
+  color: var(--accent);
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+.toggle-switch {
+  width: 32px; height: 18px;
+  border-radius: 9px;
+  background: var(--border);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+
+.toggle-switch.on { background: var(--success); }
+
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  top: 2px;
+  left: 2px;
+  transition: transform var(--transition);
+}
+
+.toggle-switch.on::after { transform: translateX(14px); }
+
+/* ---- TABS ---- */
+.tabs {
+  display: flex;
+  gap: 0;
+  padding: 0 24px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 10px 18px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab:hover { color: var(--text-primary); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ---- MAIN CONTENT ---- */
+.main { padding: 20px 24px; }
+
+/* Category Section */
+.category-section { margin-bottom: 24px; }
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.category-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+.category-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.category-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+
+/* ---- PROJECT CARDS ---- */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 12px;
+}
+
+.project-card {
+  background: var(--bg-card);
+  border: var(--card-border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.project-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--text-muted);
+  box-shadow: var(--shadow);
+}
+
+.project-card.expanded {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-lg);
+}
+
+.theme-glass .project-card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.theme-circuit .project-card {
+  border-color: #0f3460;
+  box-shadow: 0 0 8px rgba(233,69,96,0.1);
+}
+
+.theme-circuit .project-card:hover {
+  box-shadow: 0 0 12px rgba(233,69,96,0.25);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+}
+
+.status-dot-wrap {
+  position: relative;
+  width: 12px; height: 12px;
+}
+
+.status-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  transition: all var(--transition);
+}
+
+.status-dot.online { background: var(--success); box-shadow: 0 0 8px var(--success); }
+.status-dot.offline { background: var(--danger); }
+.status-dot.building { background: var(--warning); animation: pulse-glow 1.5s infinite; }
+.status-dot.idle { background: var(--info); opacity: 0.6; }
+
+.status-dot.pulse-change {
+  animation: status-change-pulse 0.6s ease;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+  50% { opacity: 0.5; box-shadow: 0 0 12px currentColor; }
+}
+
+@keyframes status-change-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.8); }
+  100% { transform: scale(1); }
+}
+
+.card-project-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  flex: 1;
+}
+
+.card-port {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  background: var(--bg-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.card-host {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.card-summary {
+  display: flex;
+  gap: 10px;
+  padding: 0 14px 10px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.badge.success { color: var(--success); border-color: rgba(63,185,80,0.3); }
+.badge.danger { color: var(--danger); border-color: rgba(248,81,73,0.3); }
+.badge.warning { color: var(--warning); border-color: rgba(210,153,34,0.3); }
+.badge.info { color: var(--accent); border-color: rgba(88,166,255,0.3); }
+
+.card-expand-icon {
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: transform var(--transition);
+}
+
+.expanded .card-expand-icon { transform: rotate(180deg); }
+
+/* ---- EXPANDED CARD DETAILS ---- */
+.card-details {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.35s ease;
+  border-top: 0px solid var(--border);
+}
+
+.project-card.expanded .card-details {
+  max-height: 800px;
+  border-top-width: 1px;
+}
+
+.detail-sections {
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.detail-section {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+}
+
+.detail-section.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 0.78rem;
+}
+
+.detail-label { color: var(--text-secondary); }
+.detail-value { color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem; }
+
+.detail-value.success { color: var(--success); }
+.detail-value.danger { color: var(--danger); }
+.detail-value.warning { color: var(--warning); }
+
+/* Server Controls */
+.server-controls {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.uptime-display {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  padding: 4px 0;
+}
+
+/* ---- DEPLOYMENT HISTORY ---- */
+.history-section {
+  margin-top: 24px;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 24px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: all var(--transition);
+}
+
+.timeline-item:hover {
+  background: var(--bg-card-hover);
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -20px;
+  top: 14px;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}
+
+.timeline-dot.success { background: var(--success); }
+.timeline-dot.danger { background: var(--danger); }
+.timeline-dot.info { background: var(--accent); }
+.timeline-dot.warning { background: var(--warning); }
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.timeline-project {
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.timeline-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.timeline-action {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.timeline-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* ---- RESOURCE OVERVIEW ---- */
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.resource-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+}
+
+.resource-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-family: var(--font-mono);
+}
+
+.resource-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* Port Map */
+.port-map {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.port-slot {
+  padding: 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-primary);
+  text-align: center;
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  transition: all var(--transition);
+}
+
+.port-slot.occupied { border-color: var(--success); background: rgba(63,185,80,0.08); }
+.port-slot.empty { opacity: 0.4; }
+
+.port-number {
+  font-weight: 700;
+  display: block;
+  color: var(--text-primary);
+}
+
+.port-project {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Disk usage bar */
+.disk-bar-container {
+  width: 100%;
+  height: 6px;
+  background: var(--bg-primary);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.disk-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* Resource table */
+.resource-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.resource-table th,
+.resource-table td {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 0.78rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.resource-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.resource-table th:hover { color: var(--accent); }
+
+.resource-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+
+/* ---- KEYBOARD SHORTCUT HINT ---- */
+.shortcut-bar {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 6px 16px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  gap: 14px;
+  z-index: 200;
+  backdrop-filter: blur(8px);
+  opacity: 0.7;
+  transition: opacity var(--transition);
+}
+
+.shortcut-bar:hover { opacity: 1; }
+
+.shortcut-key {
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+}
+
+/* ---- NOTIFICATION ---- */
+.notification {
+  position: fixed;
+  top: 60px;
+  right: 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px 18px;
+  font-size: 0.82rem;
+  z-index: 300;
+  box-shadow: var(--shadow-lg);
+  transform: translateX(120%);
+  transition: transform 0.3s ease;
+  max-width: 340px;
+}
+
+.notification.show { transform: translateX(0); }
+.notification.success { border-left: 3px solid var(--success); }
+.notification.danger { border-left: 3px solid var(--danger); }
+.notification.info { border-left: 3px solid var(--accent); }
+
+/* ---- CONFIRM DIALOG ---- */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+}
+
+.confirm-dialog {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirm-dialog h3 {
+  margin-bottom: 8px;
+  color: var(--danger);
+}
+
+.confirm-dialog p {
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  font-size: 0.85rem;
+}
+
+.confirm-dialog .btn-group {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Circuit Board special effects */
+.theme-circuit .project-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0.3;
+}
+
+.theme-circuit .project-card {
+  position: relative;
+}
+
+/* Glass special effects */
+.theme-glass .project-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px);
+}
+
+.theme-glass .project-card:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.2);
+}
+
+.theme-glass .detail-section {
+  background: rgba(0,0,0,0.2);
+  border-color: rgba(255,255,255,0.1);
+}
+
+/* Mission Control gauges */
+.gauge-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mini-gauge {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+/* Notebook friendly */
+.theme-notebook .project-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  border-color: #e5e7eb;
+}
+
+.theme-notebook .project-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 1280px) {
+  .project-grid {
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+  .detail-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading animation */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.loading-shimmer {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Spin animation for refresh */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinning { animation: spin 1s linear infinite; }
+</style>
+</head>
+<body class="theme-terminal">
+
+<div id="app"></div>
+
+<script>
+/* ============================================
+   Deploy Dashboard v2 — Application Logic
+   ============================================ */
+
+// ---- PROJECT REGISTRY ----
+const PROJECTS = [
+  {
+    name: 'CyberBRIEF', slug: 'cyberbrief', port: 5175, host: '192.168.4.86',
+    category: 'Security', description: 'Daily cyber threat intelligence briefings',
+    github: 'https://github.com/solomonneas/cyberbrief',
+    status: 'online', branch: 'main', clean: true, aheadBehind: [0, 0],
+    lastCommit: { msg: 'feat: add CISA KEV feed integration', author: 'Solomon', time: '2h ago', hash: 'a3f9c1d' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '2.1s', buildTimestamp: '2026-02-07T10:23:00Z', buildErrors: 0, bundleSize: '847KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: [],
+    nodeModulesSize: '142MB', totalDisk: '198MB', distSize: '2.4MB', gitSize: '12MB',
+    uptime: 14523, autoRestart: true
+  },
+  {
+    name: 'FortiSim', slug: 'fortisim', port: 5176, host: '192.168.4.86',
+    category: 'Security', description: 'Network packet flow simulator for FortiGate',
+    github: 'https://github.com/solomonneas/fortisim',
+    status: 'online', branch: 'feat/packet-flow', clean: false, aheadBehind: [2, 0],
+    lastCommit: { msg: 'wip: packet capture visualization', author: 'Solomon', time: '45m ago', hash: 'b7e2f4a' },
+    dirtyFiles: 3, stagedFiles: 1, untrackedFiles: 2,
+    buildStatus: 'success', buildTime: '1.8s', buildTimestamp: '2026-02-07T11:15:00Z', buildErrors: 0, bundleSize: '623KB',
+    envPresent: true, envExamplePresent: true, envMissing: ['FORTI_API_KEY'], envExtra: [],
+    nodeModulesSize: '156MB', totalDisk: '215MB', distSize: '1.8MB', gitSize: '18MB',
+    uptime: 8340, autoRestart: true
+  },
+  {
+    name: 'Model Arena', slug: 'model-arena', port: 5177, host: '192.168.4.86',
+    category: 'Fun', description: 'LLM comparison arena — head-to-head model battles',
+    github: 'https://github.com/solomonneas/model-arena',
+    status: 'offline', branch: 'main', clean: true, aheadBehind: [0, 3],
+    lastCommit: { msg: 'fix: response streaming timeout handling', author: 'Solomon', time: '3d ago', hash: 'c4d8e2b' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'failed', buildTime: '3.4s', buildTimestamp: '2026-02-05T09:42:00Z', buildErrors: 2, bundleSize: '1.2MB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: ['DEBUG_MODE'],
+    nodeModulesSize: '201MB', totalDisk: '284MB', distSize: '3.6MB', gitSize: '24MB',
+    uptime: 0, autoRestart: false
+  },
+  {
+    name: 'AI Invaders', slug: 'ai-invaders', port: 5181, host: '192.168.4.86',
+    category: 'Fun', description: 'Space invaders with AI-powered enemies',
+    github: 'https://github.com/solomonneas/ai-invaders',
+    status: 'online', branch: 'main', clean: true, aheadBehind: [0, 0],
+    lastCommit: { msg: 'polish: add screen shake on boss defeat', author: 'Solomon', time: '1d ago', hash: 'd5f9a3c' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '0.9s', buildTimestamp: '2026-02-06T16:30:00Z', buildErrors: 0, bundleSize: '412KB',
+    envPresent: false, envExamplePresent: false, envMissing: [], envExtra: [],
+    nodeModulesSize: '89MB', totalDisk: '112MB', distSize: '1.1MB', gitSize: '8MB',
+    uptime: 42180, autoRestart: true
+  },
+  {
+    name: 'Playbook Forge', slug: 'playbook-forge', port: 5178, host: '192.168.4.86',
+    category: 'Security', description: 'SOAR playbook builder and testing environment',
+    github: 'https://github.com/solomonneas/playbook-forge',
+    status: 'online', branch: 'main', clean: false, aheadBehind: [1, 0],
+    lastCommit: { msg: 'feat: add TheHive action node type', author: 'Solomon', time: '6h ago', hash: 'e8a1b5d' },
+    dirtyFiles: 1, stagedFiles: 0, untrackedFiles: 1,
+    buildStatus: 'success', buildTime: '2.7s', buildTimestamp: '2026-02-07T08:00:00Z', buildErrors: 0, bundleSize: '934KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: [],
+    nodeModulesSize: '178MB', totalDisk: '241MB', distSize: '2.9MB', gitSize: '15MB',
+    uptime: 25632, autoRestart: true
+  },
+  {
+    name: 'Intel Workbench', slug: 'intel-workbench', port: 5182, host: '192.168.4.86',
+    category: 'Security', description: 'Threat intelligence analysis workspace',
+    github: 'https://github.com/solomonneas/intel-workbench',
+    status: 'building', branch: 'main', clean: false, aheadBehind: [0, 0],
+    lastCommit: { msg: 'refactor: migrate to STIX 2.1 types', author: 'Solomon', time: '15m ago', hash: 'f2c3d7e' },
+    dirtyFiles: 1, stagedFiles: 1, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '3.1s', buildTimestamp: '2026-02-07T12:45:00Z', buildErrors: 0, bundleSize: '1.1MB',
+    envPresent: true, envExamplePresent: true, envMissing: ['MISP_URL', 'MISP_KEY'], envExtra: [],
+    nodeModulesSize: '195MB', totalDisk: '267MB', distSize: '3.2MB', gitSize: '21MB',
+    uptime: 0, autoRestart: true
+  },
+  {
+    name: 'SOC Showcase', slug: 'soc-showcase', port: 5174, host: '192.168.4.86',
+    category: 'Security', description: 'Portfolio showcase for SOC tools and projects',
+    github: 'https://github.com/solomonneas/soc-showcase',
+    status: 'online', branch: 'main', clean: true, aheadBehind: [0, 0],
+    lastCommit: { msg: 'content: update project descriptions for Q1', author: 'Solomon', time: '1d ago', hash: 'a1b2c3d' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '1.5s', buildTimestamp: '2026-02-06T14:20:00Z', buildErrors: 0, bundleSize: '567KB',
+    envPresent: false, envExamplePresent: true, envMissing: ['VITE_API_URL'], envExtra: [],
+    nodeModulesSize: '134MB', totalDisk: '172MB', distSize: '1.7MB', gitSize: '10MB',
+    uptime: 36200, autoRestart: true
+  },
+  {
+    name: 'MockWatchtower', slug: 'mockwatchtower', port: 5180, host: '192.168.4.86',
+    category: 'Infrastructure', description: 'Container monitoring dashboard mockup',
+    github: 'https://github.com/solomonneas/mockwatchtower',
+    status: 'offline', branch: 'main', clean: false, aheadBehind: [0, 5],
+    lastCommit: { msg: 'initial commit: project scaffold', author: 'Solomon', time: '2w ago', hash: 'g4h5i6j' },
+    dirtyFiles: 5, stagedFiles: 0, untrackedFiles: 3,
+    buildStatus: 'never', buildTime: null, buildTimestamp: null, buildErrors: 0, bundleSize: null,
+    envPresent: false, envExamplePresent: false, envMissing: [], envExtra: [],
+    nodeModulesSize: '98MB', totalDisk: '124MB', distSize: '0B', gitSize: '4MB',
+    uptime: 0, autoRestart: false
+  },
+  {
+    name: 'FortiLogForge', slug: 'fortilogforge', port: 5179, host: '192.168.4.86',
+    category: 'Security', description: 'FortiGate log generator and parser',
+    github: 'https://github.com/solomonneas/fortilogforge',
+    status: 'online', branch: 'feat/syslog-output', clean: false, aheadBehind: [4, 0],
+    lastCommit: { msg: 'feat: add syslog RFC 5424 output format', author: 'Solomon', time: '3h ago', hash: 'k7l8m9n' },
+    dirtyFiles: 2, stagedFiles: 2, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '1.2s', buildTimestamp: '2026-02-07T09:30:00Z', buildErrors: 0, bundleSize: '389KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: ['LOG_LEVEL'],
+    nodeModulesSize: '112MB', totalDisk: '148MB', distSize: '1.1MB', gitSize: '9MB',
+    uptime: 19870, autoRestart: true
+  },
+  {
+    name: 'LAIM', slug: 'laim', port: 5183, host: '192.168.4.85',
+    category: 'Dev Tools', description: 'Language model integration middleware',
+    github: 'https://github.com/solomonneas/laim',
+    status: 'online', branch: 'main', clean: true, aheadBehind: [0, 1],
+    lastCommit: { msg: 'fix: streaming response chunking edge case', author: 'Solomon', time: '8h ago', hash: 'o1p2q3r' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '1.6s', buildTimestamp: '2026-02-07T04:15:00Z', buildErrors: 0, bundleSize: '723KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: [],
+    nodeModulesSize: '167MB', totalDisk: '224MB', distSize: '2.1MB', gitSize: '14MB',
+    uptime: 52300, autoRestart: true
+  },
+  {
+    name: 'Zeek MCP', slug: 'zeek-mcp', port: 5184, host: '192.168.4.85',
+    category: 'Infrastructure', description: 'Zeek network monitor MCP server',
+    github: 'https://github.com/solomonneas/zeek-mcp',
+    status: 'online', branch: 'main', clean: true, aheadBehind: [0, 0],
+    lastCommit: { msg: 'feat: add conn.log parser with GeoIP enrichment', author: 'Solomon', time: '5h ago', hash: 's4t5u6v' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '0.8s', buildTimestamp: '2026-02-07T07:45:00Z', buildErrors: 0, bundleSize: '298KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: [],
+    nodeModulesSize: '78MB', totalDisk: '104MB', distSize: '0.9MB', gitSize: '6MB',
+    uptime: 31500, autoRestart: true
+  },
+  {
+    name: 'Suricata MCP', slug: 'suricata-mcp', port: 5185, host: '192.168.4.85',
+    category: 'Infrastructure', description: 'Suricata IDS/IPS MCP server',
+    github: 'https://github.com/solomonneas/suricata-mcp',
+    status: 'idle', branch: 'main', clean: true, aheadBehind: [0, 2],
+    lastCommit: { msg: 'docs: update API reference for rule management', author: 'Solomon', time: '4d ago', hash: 'w7x8y9z' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '0.7s', buildTimestamp: '2026-02-03T11:00:00Z', buildErrors: 0, bundleSize: '267KB',
+    envPresent: true, envExamplePresent: true, envMissing: ['SURICATA_SOCKET'], envExtra: [],
+    nodeModulesSize: '72MB', totalDisk: '96MB', distSize: '0.8MB', gitSize: '5MB',
+    uptime: 0, autoRestart: false
+  },
+  {
+    name: 'Claude Context Builder', slug: 'claude-context-builder', port: 5192, host: '192.168.4.86',
+    category: 'Dev Tools', description: 'Context window optimizer for Claude API',
+    github: 'https://github.com/solomonneas/claude-context-builder',
+    status: 'online', branch: 'feat/token-counter', clean: false, aheadBehind: [3, 0],
+    lastCommit: { msg: 'feat: add tiktoken-compatible counter', author: 'Solomon', time: '1h ago', hash: 'ab12cd3' },
+    dirtyFiles: 2, stagedFiles: 0, untrackedFiles: 1,
+    buildStatus: 'success', buildTime: '1.4s', buildTimestamp: '2026-02-07T11:50:00Z', buildErrors: 0, bundleSize: '534KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: ['ANTHROPIC_MODEL'],
+    nodeModulesSize: '145MB', totalDisk: '192MB', distSize: '1.6MB', gitSize: '11MB',
+    uptime: 6780, autoRestart: true
+  },
+  {
+    name: 'Code Archaeologist', slug: 'code-archaeologist', port: 5193, host: '192.168.4.86',
+    category: 'Dev Tools', description: 'Codebase history explorer and knowledge extractor',
+    github: 'https://github.com/solomonneas/code-archaeologist',
+    status: 'online', branch: 'main', clean: true, aheadBehind: [0, 0],
+    lastCommit: { msg: 'feat: timeline visualization for file evolution', author: 'Solomon', time: '12h ago', hash: 'ef45gh6' },
+    dirtyFiles: 0, stagedFiles: 0, untrackedFiles: 0,
+    buildStatus: 'success', buildTime: '1.9s', buildTimestamp: '2026-02-07T00:30:00Z', buildErrors: 0, bundleSize: '678KB',
+    envPresent: true, envExamplePresent: true, envMissing: [], envExtra: [],
+    nodeModulesSize: '158MB', totalDisk: '210MB', distSize: '2.0MB', gitSize: '13MB',
+    uptime: 44100, autoRestart: true
+  }
+];
+
+// ---- DEPLOYMENT HISTORY ----
+const DEPLOY_HISTORY = [
+  { id: 1, timestamp: '2026-02-07T12:45:00Z', project: 'Intel Workbench', action: 'Build Started', status: 'info', filesChanged: 4, commits: 1, details: 'Triggered by file change in src/types/' },
+  { id: 2, timestamp: '2026-02-07T11:50:00Z', project: 'Claude Context Builder', action: 'Deploy Success', status: 'success', filesChanged: 7, commits: 3, details: 'feat/token-counter branch — added tiktoken counter' },
+  { id: 3, timestamp: '2026-02-07T11:15:00Z', project: 'FortiSim', action: 'Deploy Success', status: 'success', filesChanged: 12, commits: 2, details: 'Packet visualization components updated' },
+  { id: 4, timestamp: '2026-02-07T10:23:00Z', project: 'CyberBRIEF', action: 'Deploy Success', status: 'success', filesChanged: 3, commits: 1, details: 'CISA KEV feed integration complete' },
+  { id: 5, timestamp: '2026-02-07T09:30:00Z', project: 'FortiLogForge', action: 'Deploy Success', status: 'success', filesChanged: 5, commits: 1, details: 'Syslog RFC 5424 output format added' },
+  { id: 6, timestamp: '2026-02-07T08:00:00Z', project: 'Playbook Forge', action: 'Deploy Success', status: 'success', filesChanged: 8, commits: 2, details: 'TheHive action node type integrated' },
+  { id: 7, timestamp: '2026-02-06T16:30:00Z', project: 'AI Invaders', action: 'Deploy Success', status: 'success', filesChanged: 2, commits: 1, details: 'Screen shake effect on boss defeat' },
+  { id: 8, timestamp: '2026-02-05T09:42:00Z', project: 'Model Arena', action: 'Build Failed', status: 'danger', filesChanged: 0, commits: 0, details: 'TypeError: Cannot read properties of undefined — streaming.ts:142, arena.ts:89' },
+  { id: 9, timestamp: '2026-02-05T08:10:00Z', project: 'Model Arena', action: 'Server Crashed', status: 'danger', filesChanged: 0, commits: 0, details: 'Process exited with code 1 — SIGTERM' },
+  { id: 10, timestamp: '2026-02-04T22:00:00Z', project: 'Zeek MCP', action: 'Auto-restart', status: 'warning', filesChanged: 0, commits: 0, details: 'Health check failed — auto-restart triggered (attempt 1/3)' },
+  { id: 11, timestamp: '2026-02-04T15:30:00Z', project: 'CyberBRIEF', action: 'Deploy Success', status: 'success', filesChanged: 15, commits: 5, details: 'Major feed parser rewrite — NVD, CISA, GitHub Advisory' },
+  { id: 12, timestamp: '2026-02-03T11:00:00Z', project: 'Suricata MCP', action: 'Deploy Success', status: 'success', filesChanged: 4, commits: 1, details: 'API reference documentation update' },
+];
+
+// ---- STATE ----
+const state = {
+  projects: JSON.parse(JSON.stringify(PROJECTS)),
+  history: [...DEPLOY_HISTORY],
+  theme: 'terminal',
+  activeTab: 'dashboard',
+  expandedCard: null,
+  autoRefresh: true,
+  refreshCountdown: 10,
+  refreshInterval: null,
+  countdownInterval: null,
+  confirmDialog: null,
+  notification: null
+};
+
+// ---- HELPERS ----
+function $(sel, parent) { return (parent || document).querySelector(sel); }
+function $$(sel, parent) { return [...(parent || document).querySelectorAll(sel)]; }
+
+function formatUptime(seconds) {
+  if (!seconds) return 'stopped';
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  if (h > 0) return `${h}h ${m}m`;
+  return `${m}m`;
+}
+
+function formatTimestamp(iso) {
+  if (!iso) return 'never';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function formatTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function getCategoryColor(cat) {
+  const map = { 'Security': 'var(--cat-security)', 'Infrastructure': 'var(--cat-infrastructure)', 'Dev Tools': 'var(--cat-devtools)', 'Fun': 'var(--cat-fun)' };
+  return map[cat] || 'var(--text-muted)';
+}
+
+function getCategoryIcon(cat) {
+  const map = { 'Security': '🛡️', 'Infrastructure': '⚙️', 'Dev Tools': '🔧', 'Fun': '🎮' };
+  return map[cat] || '📦';
+}
+
+function groupByCategory(projects) {
+  const order = ['Security', 'Infrastructure', 'Dev Tools', 'Fun'];
+  const groups = {};
+  order.forEach(c => groups[c] = []);
+  projects.forEach(p => {
+    if (!groups[p.category]) groups[p.category] = [];
+    groups[p.category].push(p);
+  });
+  return groups;
+}
+
+function countByStatus(projects) {
+  const counts = { online: 0, offline: 0, building: 0, idle: 0 };
+  projects.forEach(p => { counts[p.status] = (counts[p.status] || 0) + 1; });
+  return counts;
+}
+
+function parseSizeToMB(sizeStr) {
+  if (!sizeStr || sizeStr === '0B') return 0;
+  const num = parseFloat(sizeStr);
+  if (sizeStr.includes('GB')) return num * 1024;
+  if (sizeStr.includes('MB')) return num;
+  if (sizeStr.includes('KB')) return num / 1024;
+  return num;
+}
+
+function totalDiskUsage() {
+  return state.projects.reduce((sum, p) => sum + parseSizeToMB(p.totalDisk), 0);
+}
+
+function largestNodeModules() {
+  let max = { name: '', size: 0 };
+  state.projects.forEach(p => {
+    const sz = parseSizeToMB(p.nodeModulesSize);
+    if (sz > max.size) max = { name: p.name, size: sz, sizeStr: p.nodeModulesSize };
+  });
+  return max;
+}
+
+// ---- NOTIFICATIONS ----
+function showNotification(message, type) {
+  state.notification = { message, type };
+  render();
+  setTimeout(() => {
+    const el = $('.notification');
+    if (el) el.classList.add('show');
+  }, 50);
+  setTimeout(() => {
+    const el = $('.notification');
+    if (el) el.classList.remove('show');
+    setTimeout(() => { state.notification = null; render(); }, 300);
+  }, 3000);
+}
+
+// ---- SERVER CONTROLS ----
+function startServer(slug) {
+  const p = state.projects.find(x => x.slug === slug);
+  if (!p) return;
+  p.status = 'building';
+  render();
+  setTimeout(() => {
+    p.status = 'online';
+    p.uptime = 1;
+    showNotification(`${p.name} started on port ${p.port}`, 'success');
+    state.history.unshift({
+      id: Date.now(), timestamp: new Date().toISOString(), project: p.name,
+      action: 'Server Started', status: 'success', filesChanged: 0, commits: 0,
+      details: `Dev server started on ${p.host}:${p.port}`
+    });
+    render();
+  }, 1500 + Math.random() * 1000);
+}
+
+function stopServer(slug) {
+  const p = state.projects.find(x => x.slug === slug);
+  if (!p) return;
+  p.status = 'offline';
+  p.uptime = 0;
+  showNotification(`${p.name} stopped`, 'info');
+  state.history.unshift({
+    id: Date.now(), timestamp: new Date().toISOString(), project: p.name,
+    action: 'Server Stopped', status: 'info', filesChanged: 0, commits: 0,
+    details: `Dev server stopped on port ${p.port}`
+  });
+  render();
+}
+
+function restartServer(slug) {
+  const p = state.projects.find(x => x.slug === slug);
+  if (!p) return;
+  p.status = 'building';
+  render();
+  setTimeout(() => {
+    p.status = 'online';
+    p.uptime = 1;
+    showNotification(`${p.name} restarted`, 'success');
+    state.history.unshift({
+      id: Date.now(), timestamp: new Date().toISOString(), project: p.name,
+      action: 'Server Restarted', status: 'success', filesChanged: 0, commits: 0,
+      details: `Dev server restarted on port ${p.port}`
+    });
+    render();
+  }, 2000 + Math.random() * 1000);
+}
+
+function killServer(slug) {
+  state.confirmDialog = {
+    title: 'Kill Process',
+    message: `Force kill ${state.projects.find(x => x.slug === slug)?.name}? This sends SIGKILL.`,
+    onConfirm: () => {
+      stopServer(slug);
+      state.confirmDialog = null;
+      render();
+    },
+    onCancel: () => {
+      state.confirmDialog = null;
+      render();
+    }
+  };
+  render();
+}
+
+function startAll() {
+  state.projects.forEach(p => {
+    if (p.status === 'offline' || p.status === 'idle') {
+      p.status = 'building';
+    }
+  });
+  render();
+  state.projects.forEach((p, i) => {
+    if (p.status === 'building') {
+      setTimeout(() => {
+        p.status = 'online';
+        p.uptime = 1;
+        render();
+      }, 1000 + i * 400 + Math.random() * 600);
+    }
+  });
+  showNotification('Starting all servers...', 'info');
+  state.history.unshift({
+    id: Date.now(), timestamp: new Date().toISOString(), project: 'All Projects',
+    action: 'Start All', status: 'info', filesChanged: 0, commits: 0,
+    details: 'Batch start initiated for all offline/idle projects'
+  });
+}
+
+function stopAll() {
+  state.confirmDialog = {
+    title: 'Stop All Servers',
+    message: 'Stop all running dev servers? This will send SIGTERM to all processes.',
+    onConfirm: () => {
+      state.projects.forEach(p => { p.status = 'offline'; p.uptime = 0; });
+      state.confirmDialog = null;
+      showNotification('All servers stopped', 'danger');
+      state.history.unshift({
+        id: Date.now(), timestamp: new Date().toISOString(), project: 'All Projects',
+        action: 'Stop All', status: 'danger', filesChanged: 0, commits: 0,
+        details: 'All dev servers terminated'
+      });
+      render();
+    },
+    onCancel: () => { state.confirmDialog = null; render(); }
+  };
+  render();
+}
+
+function rollbackDeploy(historyId) {
+  const item = state.history.find(h => h.id === historyId);
+  if (!item) return;
+  showNotification(`Rollback initiated for ${item.project}`, 'warning');
+  state.history.unshift({
+    id: Date.now(), timestamp: new Date().toISOString(), project: item.project,
+    action: 'Rollback', status: 'warning', filesChanged: item.filesChanged, commits: item.commits,
+    details: `Rolling back deployment from ${formatDate(item.timestamp)} ${formatTime(item.timestamp)}`
+  });
+  render();
+}
+
+// ---- SIMULATED REFRESH ----
+function simulateRefresh() {
+  state.projects.forEach(p => {
+    if (p.status === 'online') {
+      p.uptime += 10;
+    }
+  });
+  // Tiny chance of random status change for realism
+  if (Math.random() < 0.05) {
+    const online = state.projects.filter(p => p.status === 'online');
+    if (online.length > 3) {
+      // nothing dramatic — just increment uptime visually
+    }
+  }
+  render();
+}
+
+// ---- AUTO REFRESH ----
+function startAutoRefresh() {
+  stopAutoRefresh();
+  state.refreshCountdown = 10;
+  state.countdownInterval = setInterval(() => {
+    state.refreshCountdown--;
+    const el = $('.countdown');
+    if (el) el.textContent = state.refreshCountdown + 's';
+    if (state.refreshCountdown <= 0) {
+      state.refreshCountdown = 10;
+      simulateRefresh();
+    }
+  }, 1000);
+}
+
+function stopAutoRefresh() {
+  if (state.countdownInterval) clearInterval(state.countdownInterval);
+  state.countdownInterval = null;
+}
+
+function toggleAutoRefresh() {
+  state.autoRefresh = !state.autoRefresh;
+  if (state.autoRefresh) startAutoRefresh();
+  else stopAutoRefresh();
+  render();
+}
+
+// ---- THEME ----
+const THEMES = ['terminal', 'mission', 'notebook', 'circuit', 'glass'];
+const THEME_NAMES = { terminal: 'Terminal', mission: 'Mission Control', notebook: 'Notebook', circuit: 'Circuit Board', glass: 'Glassmorphism' };
+
+function setTheme(theme) {
+  state.theme = theme;
+  document.body.className = 'theme-' + theme;
+  if (theme === 'glass') document.body.classList.add('theme-glass-bg');
+  try { localStorage.setItem('ddv2-theme', theme); } catch {}
+  render();
+}
+
+function cycleTheme() {
+  const idx = THEMES.indexOf(state.theme);
+  setTheme(THEMES[(idx + 1) % THEMES.length]);
+}
+
+// ---- RENDER ----
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = renderHeader() + renderTabs() + renderMain() + renderShortcutBar() + renderNotification() + renderConfirmDialog();
+  attachEvents();
+}
+
+function renderHeader() {
+  const counts = countByStatus(state.projects);
+  return `
+    <div class="header">
+      <div class="header-title">
+        <span class="icon">🚀</span>
+        <span>Deploy Dashboard</span>
+      </div>
+      <div class="header-stats">
+        <span class="stat-pill"><span class="dot green"></span> ${counts.online} online</span>
+        <span class="stat-pill"><span class="dot red"></span> ${counts.offline} offline</span>
+        ${counts.building ? `<span class="stat-pill"><span class="dot yellow"></span> ${counts.building} building</span>` : ''}
+        ${counts.idle ? `<span class="stat-pill"><span class="dot blue"></span> ${counts.idle} idle</span>` : ''}
+      </div>
+      <div class="header-controls">
+        <button class="btn btn-success" onclick="startAll()">▶ Start All</button>
+        <button class="btn btn-danger" onclick="stopAll()">■ Stop All</button>
+        <button class="btn btn-accent" onclick="simulateRefresh()" title="Refresh (R)">↻ Refresh</button>
+        <div class="auto-refresh-toggle">
+          <span>Auto</span>
+          <div class="toggle-switch ${state.autoRefresh ? 'on' : ''}" onclick="toggleAutoRefresh()"></div>
+          ${state.autoRefresh ? `<span class="countdown">${state.refreshCountdown}s</span>` : ''}
+        </div>
+        <div class="theme-switcher">
+          ${THEMES.map(t => `<div class="theme-btn ${state.theme === t ? 'active' : ''}" data-theme="${t}" onclick="setTheme('${t}')" title="${THEME_NAMES[t]}"></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderTabs() {
+  const tabs = [
+    { id: 'dashboard', label: '📊 Dashboard', icon: '' },
+    { id: 'history', label: '📜 History', icon: '' },
+    { id: 'resources', label: '💾 Resources', icon: '' }
+  ];
+  return `<div class="tabs">${tabs.map(t =>
+    `<div class="tab ${state.activeTab === t.id ? 'active' : ''}" onclick="state.activeTab='${t.id}';render()">${t.label}</div>`
+  ).join('')}</div>`;
+}
+
+function renderMain() {
+  if (state.activeTab === 'history') return `<div class="main fade-in">${renderHistoryView()}</div>`;
+  if (state.activeTab === 'resources') return `<div class="main fade-in">${renderResourcesView()}</div>`;
+  return `<div class="main fade-in">${renderDashboardView()}</div>`;
+}
+
+// ---- DASHBOARD VIEW ----
+function renderDashboardView() {
+  const groups = groupByCategory(state.projects);
+  let html = '';
+  for (const [cat, projects] of Object.entries(groups)) {
+    if (!projects.length) continue;
+    const online = projects.filter(p => p.status === 'online').length;
+    html += `
+      <div class="category-section">
+        <div class="category-header">
+          <span>${getCategoryIcon(cat)}</span>
+          <span class="category-dot" style="background:${getCategoryColor(cat)}"></span>
+          <span class="category-label" style="color:${getCategoryColor(cat)}">${cat}</span>
+          <span class="category-count">${online}/${projects.length} online</span>
+        </div>
+        <div class="project-grid">
+          ${projects.map(p => renderProjectCard(p)).join('')}
+        </div>
+      </div>`;
+  }
+  return html;
+}
+
+function renderProjectCard(p) {
+  const expanded = state.expandedCard === p.slug;
+  const buildIcon = p.buildStatus === 'success' ? '✓' : p.buildStatus === 'failed' ? '✗' : '○';
+  const buildClass = p.buildStatus === 'success' ? 'success' : p.buildStatus === 'failed' ? 'danger' : '';
+  const gitIcon = p.clean ? '✓' : `⚠ ${p.dirtyFiles}`;
+  const gitClass = p.clean ? 'success' : 'warning';
+
+  return `
+    <div class="project-card ${expanded ? 'expanded' : ''}" data-slug="${p.slug}" onclick="toggleCard('${p.slug}')">
+      <div class="card-header">
+        <div class="status-dot-wrap">
+          <div class="status-dot ${p.status}"></div>
+        </div>
+        <span class="card-project-name">${p.name}</span>
+        <span class="card-port">:${p.port}</span>
+        <span class="card-host">${p.host === '192.168.4.85' ? '(.85)' : ''}</span>
+        <span class="card-expand-icon">▼</span>
+      </div>
+      <div class="card-summary">
+        <span class="badge info">⎇ ${p.branch}</span>
+        <span class="badge ${gitClass}">${gitIcon} ${p.clean ? 'clean' : 'dirty'}</span>
+        <span class="badge ${buildClass}">${buildIcon} ${p.buildStatus === 'never' ? 'no build' : p.buildStatus}</span>
+        ${p.bundleSize ? `<span class="badge">${p.bundleSize}</span>` : ''}
+      </div>
+      <div class="card-details">
+        ${expanded ? renderCardDetails(p) : ''}
+      </div>
+    </div>`;
+}
+
+function renderCardDetails(p) {
+  return `
+    <div class="detail-sections">
+      <!-- Git State -->
+      <div class="detail-section">
+        <div class="detail-title">⎇ Git State</div>
+        <div class="detail-row"><span class="detail-label">Branch</span><span class="detail-value">${p.branch}</span></div>
+        <div class="detail-row"><span class="detail-label">Working Tree</span><span class="detail-value ${p.clean ? 'success' : 'warning'}">${p.clean ? 'Clean' : 'Dirty'}</span></div>
+        ${!p.clean ? `
+        <div class="detail-row"><span class="detail-label">Modified</span><span class="detail-value warning">${p.dirtyFiles} files</span></div>
+        <div class="detail-row"><span class="detail-label">Staged</span><span class="detail-value">${p.stagedFiles} files</span></div>
+        <div class="detail-row"><span class="detail-label">Untracked</span><span class="detail-value">${p.untrackedFiles} files</span></div>
+        ` : ''}
+        <div class="detail-row"><span class="detail-label">Ahead / Behind</span><span class="detail-value ${p.aheadBehind[0] ? 'warning' : ''}">${p.aheadBehind[0]}↑ ${p.aheadBehind[1]}↓</span></div>
+        <div class="detail-row"><span class="detail-label">Last Commit</span><span class="detail-value" style="font-size:0.68rem">${p.lastCommit.hash.slice(0,7)}</span></div>
+        <div class="detail-row"><span class="detail-label"></span><span class="detail-value" style="font-size:0.68rem;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.lastCommit.msg}</span></div>
+        <div class="detail-row"><span class="detail-label"></span><span class="detail-value" style="font-size:0.68rem;color:var(--text-muted)">${p.lastCommit.author} · ${p.lastCommit.time}</span></div>
+      </div>
+
+      <!-- Build Health -->
+      <div class="detail-section">
+        <div class="detail-title">🔨 Build Health</div>
+        <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value ${p.buildStatus === 'success' ? 'success' : p.buildStatus === 'failed' ? 'danger' : ''}">${p.buildStatus === 'never' ? 'Never built' : p.buildStatus.toUpperCase()}</span></div>
+        ${p.buildTime ? `<div class="detail-row"><span class="detail-label">Build Time</span><span class="detail-value">${p.buildTime}</span></div>` : ''}
+        ${p.buildTimestamp ? `<div class="detail-row"><span class="detail-label">Last Build</span><span class="detail-value">${formatTimestamp(p.buildTimestamp)}</span></div>` : ''}
+        ${p.buildErrors ? `<div class="detail-row"><span class="detail-label">Errors</span><span class="detail-value danger">${p.buildErrors} error${p.buildErrors > 1 ? 's' : ''}</span></div>` : ''}
+        ${p.bundleSize ? `<div class="detail-row"><span class="detail-label">Bundle</span><span class="detail-value">${p.bundleSize}</span></div>` : ''}
+      </div>
+
+      <!-- Environment -->
+      <div class="detail-section">
+        <div class="detail-title">🔐 Environment</div>
+        <div class="detail-row"><span class="detail-label">.env</span><span class="detail-value ${p.envPresent ? 'success' : 'danger'}">${p.envPresent ? '✓ Present' : '✗ Missing'}</span></div>
+        <div class="detail-row"><span class="detail-label">.env.example</span><span class="detail-value ${p.envExamplePresent ? 'success' : ''}">${p.envExamplePresent ? '✓ Present' : '—'}</span></div>
+        ${p.envMissing.length ? `<div class="detail-row"><span class="detail-label">Missing Keys</span><span class="detail-value danger">${p.envMissing.join(', ')}</span></div>` : ''}
+        ${p.envExtra.length ? `<div class="detail-row"><span class="detail-label">Extra Keys</span><span class="detail-value warning">${p.envExtra.join(', ')}</span></div>` : ''}
+        ${!p.envMissing.length && !p.envExtra.length && p.envPresent ? `<div class="detail-row"><span class="detail-label">Status</span><span class="detail-value success">All keys matched</span></div>` : ''}
+      </div>
+
+      <!-- Disk Usage -->
+      <div class="detail-section">
+        <div class="detail-title">💾 Disk Usage</div>
+        <div class="detail-row"><span class="detail-label">Total</span><span class="detail-value">${p.totalDisk}</span></div>
+        <div class="detail-row"><span class="detail-label">node_modules</span><span class="detail-value">${p.nodeModulesSize}</span></div>
+        <div class="detail-row"><span class="detail-label">dist/</span><span class="detail-value">${p.distSize || '—'}</span></div>
+        <div class="detail-row"><span class="detail-label">.git/</span><span class="detail-value">${p.gitSize}</span></div>
+        <div class="disk-bar-container">
+          <div class="disk-bar" style="width:${Math.min(100, parseSizeToMB(p.nodeModulesSize) / parseSizeToMB(p.totalDisk) * 100)}%;background:var(--warning)"></div>
+        </div>
+        <div style="font-size:0.65rem;color:var(--text-muted);margin-top:2px">node_modules: ${Math.round(parseSizeToMB(p.nodeModulesSize) / parseSizeToMB(p.totalDisk) * 100)}% of total</div>
+      </div>
+
+      <!-- Server Controls -->
+      <div class="detail-section full-width">
+        <div class="detail-title">🖥️ Server Controls</div>
+        <div class="detail-row">
+          <span class="detail-label">Status</span>
+          <span class="detail-value ${p.status === 'online' ? 'success' : p.status === 'building' ? 'warning' : 'danger'}">${p.status.toUpperCase()}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Uptime</span>
+          <span class="detail-value">${formatUptime(p.uptime)}</span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-label">Auto-restart</span>
+          <span class="detail-value ${p.autoRestart ? 'success' : ''}">${p.autoRestart ? 'Enabled' : 'Disabled'}</span>
+        </div>
+        <div class="server-controls" onclick="event.stopPropagation()">
+          ${p.status === 'offline' || p.status === 'idle'
+            ? `<button class="btn btn-sm btn-success" onclick="startServer('${p.slug}')">▶ Start</button>`
+            : `<button class="btn btn-sm btn-danger" onclick="stopServer('${p.slug}')">■ Stop</button>
+               <button class="btn btn-sm btn-accent" onclick="restartServer('${p.slug}')">↻ Restart</button>`
+          }
+          <button class="btn btn-sm btn-danger" onclick="killServer('${p.slug}')" title="Force Kill (SIGKILL)">☠ Kill</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleCard(slug) {
+  state.expandedCard = state.expandedCard === slug ? null : slug;
+  render();
+}
+
+// ---- HISTORY VIEW ----
+function renderHistoryView() {
+  return `
+    <h2 style="font-size:1.1rem;margin-bottom:16px;display:flex;align-items:center;gap:8px">📜 Deployment History <span style="font-size:0.75rem;color:var(--text-muted)">${state.history.length} events</span></h2>
+    <div class="timeline">
+      ${state.history.slice(0, 20).map(h => `
+        <div class="timeline-item">
+          <div class="timeline-dot ${h.status}"></div>
+          <div class="timeline-header">
+            <span class="timeline-project" style="color:${getProjectColor(h.project)}">${h.project}</span>
+            <span class="timeline-time">${formatDate(h.timestamp)} ${formatTime(h.timestamp)}</span>
+          </div>
+          <div class="timeline-action">${h.action}</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">${h.details}</div>
+          <div class="timeline-meta">
+            ${h.filesChanged ? `<span>📄 ${h.filesChanged} files</span>` : ''}
+            ${h.commits ? `<span>📝 ${h.commits} commit${h.commits > 1 ? 's' : ''}</span>` : ''}
+            <span>${formatTimestamp(h.timestamp)}</span>
+            ${h.status === 'success' ? `<button class="btn btn-sm" onclick="event.stopPropagation();rollbackDeploy(${h.id})" style="margin-left:auto">↩ Rollback</button>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+function getProjectColor(name) {
+  const p = state.projects.find(x => x.name === name);
+  if (!p) return 'var(--text-primary)';
+  return getCategoryColor(p.category);
+}
+
+// ---- RESOURCES VIEW ----
+function renderResourcesView() {
+  const total = totalDiskUsage();
+  const largest = largestNodeModules();
+  const counts = countByStatus(state.projects);
+  const dirtyProjects = state.projects.filter(p => !p.clean).length;
+  const failedBuilds = state.projects.filter(p => p.buildStatus === 'failed').length;
+  const missingEnv = state.projects.filter(p => p.envMissing.length > 0 || (!p.envPresent && p.envExamplePresent)).length;
+
+  // Port range
+  const ports = [];
+  for (let port = 5174; port <= 5195; port++) {
+    const project = state.projects.find(p => p.port === port);
+    ports.push({ port, project });
+  }
+
+  return `
+    <h2 style="font-size:1.1rem;margin-bottom:16px">💾 Resource Overview</h2>
+
+    <div class="resource-grid">
+      <div class="resource-card">
+        <div class="resource-value">${state.projects.length}</div>
+        <div class="resource-label">Total Projects</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value" style="color:var(--success)">${counts.online}</div>
+        <div class="resource-label">Online</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value" style="color:var(--danger)">${counts.offline}</div>
+        <div class="resource-label">Offline</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value">${(total / 1024).toFixed(1)}GB</div>
+        <div class="resource-label">Total Disk Usage</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value" style="color:var(--warning)">${dirtyProjects}</div>
+        <div class="resource-label">Dirty Repos</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value" style="color:var(--danger)">${failedBuilds}</div>
+        <div class="resource-label">Failed Builds</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value" style="color:var(--warning)">${missingEnv}</div>
+        <div class="resource-label">Env Issues</div>
+      </div>
+      <div class="resource-card">
+        <div class="resource-value" style="font-size:1rem">${largest.name}</div>
+        <div class="resource-label">Largest node_modules (${largest.sizeStr})</div>
+      </div>
+    </div>
+
+    <h3 style="font-size:0.95rem;margin:20px 0 12px">Disk Usage by Project</h3>
+    <div style="overflow-x:auto">
+      <table class="resource-table">
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Status</th>
+            <th>Total</th>
+            <th>node_modules</th>
+            <th>dist/</th>
+            <th>.git/</th>
+            <th>Build</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${state.projects.sort((a, b) => parseSizeToMB(b.totalDisk) - parseSizeToMB(a.totalDisk)).map(p => `
+            <tr>
+              <td style="font-weight:600">${p.name}</td>
+              <td><span class="status-dot ${p.status}" style="width:8px;height:8px;display:inline-block;border-radius:50%;vertical-align:middle"></span> ${p.status}</td>
+              <td style="font-family:var(--font-mono)">${p.totalDisk}</td>
+              <td style="font-family:var(--font-mono)">${p.nodeModulesSize}</td>
+              <td style="font-family:var(--font-mono)">${p.distSize || '—'}</td>
+              <td style="font-family:var(--font-mono)">${p.gitSize}</td>
+              <td><span class="badge ${p.buildStatus === 'success' ? 'success' : p.buildStatus === 'failed' ? 'danger' : ''}">${p.buildStatus}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:0.95rem;margin:24px 0 12px">Port Allocation Map</h3>
+    <div class="port-map">
+      ${ports.map(({ port, project }) => `
+        <div class="port-slot ${project ? 'occupied' : 'empty'}">
+          <span class="port-number">${port}</span>
+          <span class="port-project">${project ? project.name : 'available'}</span>
+          ${project ? `<span class="status-dot ${project.status}" style="width:6px;height:6px;display:inline-block;border-radius:50%;margin-top:3px"></span>` : ''}
+        </div>
+      `).join('')}
+    </div>`;
+}
+
+// ---- SHORTCUT BAR ----
+function renderShortcutBar() {
+  return `
+    <div class="shortcut-bar">
+      <span><span class="shortcut-key">R</span> Refresh</span>
+      <span><span class="shortcut-key">T</span> Theme</span>
+      <span><span class="shortcut-key">1-5</span> Themes</span>
+      <span><span class="shortcut-key">S</span> Start All</span>
+      <span><span class="shortcut-key">X</span> Stop All</span>
+      <span><span class="shortcut-key">Esc</span> Collapse</span>
+    </div>`;
+}
+
+// ---- NOTIFICATION ----
+function renderNotification() {
+  if (!state.notification) return '';
+  return `<div class="notification ${state.notification.type}">${state.notification.message}</div>`;
+}
+
+// ---- CONFIRM DIALOG ----
+function renderConfirmDialog() {
+  if (!state.confirmDialog) return '';
+  const d = state.confirmDialog;
+  return `
+    <div class="confirm-overlay" onclick="if(event.target===this){state.confirmDialog.onCancel()}">
+      <div class="confirm-dialog">
+        <h3>${d.title}</h3>
+        <p>${d.message}</p>
+        <div class="btn-group">
+          <button class="btn" onclick="state.confirmDialog.onCancel()">Cancel</button>
+          <button class="btn btn-danger" onclick="state.confirmDialog.onConfirm()">Confirm</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ---- EVENT ATTACHMENT ----
+function attachEvents() {
+  // Notification show after render
+  setTimeout(() => {
+    const notif = document.querySelector('.notification');
+    if (notif && state.notification) notif.classList.add('show');
+  }, 50);
+}
+
+// ---- KEYBOARD SHORTCUTS ----
+document.addEventListener('keydown', (e) => {
+  // Don't trigger if user is typing in an input
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+  switch (e.key.toLowerCase()) {
+    case 'r':
+      simulateRefresh();
+      showNotification('Dashboard refreshed', 'info');
+      break;
+    case 't':
+      cycleTheme();
+      break;
+    case '1': setTheme('terminal'); break;
+    case '2': setTheme('mission'); break;
+    case '3': setTheme('notebook'); break;
+    case '4': setTheme('circuit'); break;
+    case '5': setTheme('glass'); break;
+    case 's':
+      if (!e.ctrlKey && !e.metaKey) startAll();
+      break;
+    case 'x':
+      stopAll();
+      break;
+    case 'escape':
+      if (state.confirmDialog) {
+        state.confirmDialog.onCancel();
+      } else {
+        state.expandedCard = null;
+        render();
+      }
+      break;
+  }
+});
+
+// ---- INIT ----
+try { const saved = localStorage.getItem('ddv2-theme'); if (saved && THEMES.includes(saved)) state.theme = saved; } catch {}
+document.body.className = 'theme-' + state.theme;
+render();
+if (state.autoRefresh) startAutoRefresh();
+
+// ===== FAB: Keyboard Hints & Settings Gear =====
+(function(){
+  var defTheme = null;
+  try { defTheme = localStorage.getItem('deploy-dashboard-v2-default-theme'); } catch(e){}
+  if (defTheme && ['terminal','mission','notebook','circuit','glass'].indexOf(defTheme) !== -1) {
+    setTheme(defTheme);
+  }
+
+  var THEMES_FAB = ['terminal','mission','notebook','circuit','glass'];
+  var THEME_LABELS = {'terminal':'Terminal','mission':'Mission Control','notebook':'Notebook','circuit':'Circuit Board','glass':'Glassmorphism'};
+
+  var styleEl = document.createElement('style');
+  styleEl.textContent = '@keyframes fabSlideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}@keyframes fabFadeIn{from{opacity:0}to{opacity:1}}';
+  document.head.appendChild(styleEl);
+
+  function makeFab(icon, side) {
+    var btn = document.createElement('div');
+    btn.textContent = icon;
+    btn.style.cssText = 'position:fixed;bottom:24px;'+side+':24px;width:40px;height:40px;border-radius:50%;background:rgba(17,24,39,0.92);color:#06b6d4;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10000;font-size:18px;border:1px solid rgba(6,182,212,0.3);box-shadow:0 2px 12px rgba(0,0,0,0.4);transition:background 0.2s;user-select:none;';
+    btn.addEventListener('mouseenter', function(){ btn.style.background='rgba(6,182,212,0.18)'; });
+    btn.addEventListener('mouseleave', function(){ btn.style.background='rgba(17,24,39,0.92)'; });
+    return btn;
+  }
+
+  function makePanel(side, bottomOffset) {
+    var panel = document.createElement('div');
+    panel.style.cssText = 'position:fixed;bottom:'+bottomOffset+'px;'+side+':24px;min-width:220px;background:rgba(17,24,39,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(6,182,212,0.2);border-radius:12px;padding:16px;z-index:10001;animation:fabSlideUp 0.22s ease-out;display:none;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;font-size:13px;box-shadow:0 8px 32px rgba(0,0,0,0.5);';
+    return panel;
+  }
+
+  var hintBtn = makeFab('?', 'right');
+  var hintPanel = makePanel('right', 76);
+  hintPanel.innerHTML = '<div style="font-weight:600;margin-bottom:10px;color:#06b6d4;font-size:14px;">\u2328 Keyboard Shortcuts</div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px;">' +
+    [['1-5','Switch theme'],['R','Refresh'],['T','Cycle theme'],['S','Start all'],['X','Stop all'],['Esc','Close']].map(function(p){
+      return '<div style="display:flex;justify-content:space-between;gap:12px;"><kbd style="background:rgba(6,182,212,0.15);padding:2px 7px;border-radius:4px;font-family:monospace;font-size:12px;color:#06b6d4;white-space:nowrap;">'+p[0]+'</kbd><span style="color:#94a3b8;">'+p[1]+'</span></div>';
+    }).join('') + '</div>';
+  document.body.appendChild(hintBtn);
+  document.body.appendChild(hintPanel);
+
+  var hintOpen = false;
+  function toggleHints() { hintOpen = !hintOpen; hintPanel.style.display = hintOpen ? 'block' : 'none'; }
+  hintBtn.addEventListener('click', function(e){ e.stopPropagation(); toggleHints(); if(settOpen){settOpen=false;settPanel.style.display='none';} });
+
+  var settBtn = makeFab('\u2699', 'left');
+  var settPanel = makePanel('left', 76);
+
+  function buildSettPanel() {
+    var cur = null;
+    try { cur = localStorage.getItem('deploy-dashboard-v2-default-theme'); } catch(e){}
+    var html = '<div style="font-weight:600;margin-bottom:10px;color:#06b6d4;font-size:14px;">\u2699 Default Theme</div>';
+    html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;"><input type="radio" name="ddv2-def-theme" value="" '+(cur?'':'checked')+' style="accent-color:rgba(6,182,212,0.9);"><span>Show all themes (default)</span></label>';
+    THEMES_FAB.forEach(function(t){
+      html += '<label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;"><input type="radio" name="ddv2-def-theme" value="'+t+'" '+(cur===t?'checked':'')+' style="accent-color:rgba(6,182,212,0.9);"><span>'+THEME_LABELS[t]+'</span></label>';
+    });
+    settPanel.innerHTML = html;
+    settPanel.querySelectorAll('input[name="ddv2-def-theme"]').forEach(function(radio){
+      radio.addEventListener('change', function(){
+        var v = this.value;
+        try {
+          if (v) { localStorage.setItem('deploy-dashboard-v2-default-theme', v); setTheme(v); }
+          else { localStorage.removeItem('deploy-dashboard-v2-default-theme'); var s=localStorage.getItem('ddv2-theme'); if(s&&THEMES_FAB.indexOf(s)!==-1){setTheme(s);}else{setTheme(THEMES_FAB[0]);} }
+        } catch(e){}
+      });
+    });
+  }
+
+  document.body.appendChild(settBtn);
+  document.body.appendChild(settPanel);
+
+  var settOpen = false;
+  settBtn.addEventListener('click', function(e){ e.stopPropagation(); settOpen=!settOpen; if(settOpen){buildSettPanel();settPanel.style.display='block';}else{settPanel.style.display='none';} if(hintOpen){hintOpen=false;hintPanel.style.display='none';} });
+
+  document.addEventListener('click', function(e){
+    if (hintOpen && !hintPanel.contains(e.target) && e.target !== hintBtn) { hintOpen=false; hintPanel.style.display='none'; }
+    if (settOpen && !settPanel.contains(e.target) && e.target !== settBtn) { settOpen=false; settPanel.style.display='none'; }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (['INPUT','TEXTAREA','SELECT'].indexOf(document.activeElement?.tagName) !== -1) return;
+    if (e.key === '?') { e.preventDefault(); toggleHints(); if(settOpen){settOpen=false;settPanel.style.display='none';} }
+  });
+})();
+
+</script>
+</body>
+</html>
