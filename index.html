@@ -969,6 +969,14 @@ body.theme-glass-bg {
 }
 
 .spinning { animation: spin 1s linear infinite; }
+
+/* ---- MODE TOGGLE (Live/Demo) ---- */
+.mode-toggle { display:flex; align-items:center; gap:6px; padding:4px 12px; font-size:11px; font-weight:600; border-radius:20px; cursor:pointer; border:1px solid var(--border); background:var(--bg-input); color:var(--text-secondary); font-family:var(--font-mono); transition:all 0.2s; }
+.mode-toggle:hover { border-color:var(--accent); color:var(--text-primary); }
+.mode-toggle.live { border-color:var(--success); color:var(--success); }
+.mode-toggle.live .mode-icon { animation: pulse-dot 2s infinite; }
+.mode-toggle.error { border-color:var(--danger); }
+@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 </style>
 </head>
 <body class="theme-terminal">
@@ -1168,6 +1176,102 @@ const DEPLOY_HISTORY = [
   { id: 12, timestamp: '2026-02-03T11:00:00Z', project: 'Suricata MCP', action: 'Deploy Success', status: 'success', filesChanged: 4, commits: 1, details: 'API reference documentation update' },
 ];
 
+// ---- DATA MODE (Live/Demo) ----
+const API_BASE = `http://${window.location.hostname}:8005`;
+let dataMode = localStorage.getItem('ddv2_data_mode') || 'demo';
+
+function toggleDataMode() {
+  dataMode = dataMode === 'demo' ? 'live' : 'demo';
+  localStorage.setItem('ddv2_data_mode', dataMode);
+  loadData();
+}
+
+function updateModeToggle() {
+  const btn = document.querySelector('.mode-toggle');
+  if (!btn) return;
+  btn.classList.remove('live', 'error');
+  if (dataMode === 'live') btn.classList.add('live');
+  btn.querySelector('.mode-label').textContent = dataMode === 'live' ? 'Live' : 'Demo';
+}
+
+async function fetchAPI(path, opts = {}) {
+  try {
+    const res = await fetch(API_BASE + path, opts);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (err) {
+    console.warn('API error:', err.message);
+    const btn = document.querySelector('.mode-toggle');
+    if (btn) btn.classList.add('error');
+    return null;
+  }
+}
+
+async function loadData() {
+  updateModeToggle();
+  if (dataMode === 'demo') {
+    state.projects = JSON.parse(JSON.stringify(PROJECTS));
+    state.history = [...DEPLOY_HISTORY];
+    render();
+    return;
+  }
+  // Live mode
+  const data = await fetchAPI('/api/projects?disk=true');
+  if (!data) {
+    // API unreachable, fall back to demo
+    dataMode = 'demo';
+    localStorage.setItem('ddv2_data_mode', 'demo');
+    state.projects = JSON.parse(JSON.stringify(PROJECTS));
+    state.history = [...DEPLOY_HISTORY];
+    showNotification('API unreachable — switched to Demo mode', 'danger');
+    render();
+    return;
+  }
+
+  state.projects = data.projects.map(p => ({
+    name: p.name,
+    slug: p.slug,
+    port: p.port || 0,
+    host: '192.168.4.86',
+    category: p.category ? p.category.charAt(0).toUpperCase() + p.category.slice(1) : 'Dev Tools',
+    description: p.description || '',
+    github: p.github || '',
+    status: p.online ? 'online' : 'offline',
+    branch: p.git?.branch || 'main',
+    clean: p.git ? !p.git.dirty : true,
+    aheadBehind: [0, 0],
+    lastCommit: p.git?.lastCommit ? {
+      msg: p.git.lastCommit.message || '',
+      author: p.git.lastCommit.author || 'Unknown',
+      time: p.git.lastCommit.date ? formatTimestamp(p.git.lastCommit.date) : 'unknown',
+      hash: p.git.lastCommit.hash || '0000000'
+    } : { msg: 'No commits', author: '', time: '', hash: '0000000' },
+    dirtyFiles: p.git?.dirtyFiles || 0,
+    stagedFiles: 0,
+    untrackedFiles: 0,
+    buildStatus: p.online ? 'success' : 'never',
+    buildTime: null,
+    buildTimestamp: null,
+    buildErrors: 0,
+    bundleSize: null,
+    envPresent: false,
+    envExamplePresent: false,
+    envMissing: [],
+    envExtra: [],
+    nodeModulesSize: p.disk?.nodeModulesSize || 'N/A',
+    totalDisk: p.disk?.totalDisk || 'N/A',
+    distSize: p.disk?.distSize || 'N/A',
+    gitSize: p.disk?.gitSize || 'N/A',
+    uptime: p.online ? 1 : 0,
+    autoRestart: false,
+    hasLocalDir: p.hasLocalDir
+  }));
+
+  // Keep history from demo in live mode (no live history endpoint yet)
+  state.history = [...DEPLOY_HISTORY];
+  render();
+}
+
 // ---- STATE ----
 const state = {
   projects: JSON.parse(JSON.stringify(PROJECTS)),
@@ -1286,9 +1390,26 @@ function showNotification(message, type) {
 }
 
 // ---- SERVER CONTROLS ----
-function startServer(slug) {
+async function startServer(slug) {
   const p = state.projects.find(x => x.slug === slug);
   if (!p) return;
+
+  if (dataMode === 'live') {
+    p.status = 'building';
+    render();
+    const res = await fetchAPI('/api/projects/' + slug + '/start', { method: 'POST' });
+    if (res) {
+      showNotification(res.status === 'already_running' ? `${p.name} already running` : `${p.name} starting...`, 'success');
+      setTimeout(() => loadData(), 3000);
+    } else {
+      p.status = 'offline';
+      showNotification('Failed to start ' + p.name, 'danger');
+      render();
+    }
+    return;
+  }
+
+  // Demo mode: existing mock behavior
   p.status = 'building';
   render();
   setTimeout(() => {
@@ -1304,9 +1425,25 @@ function startServer(slug) {
   }, 1500 + Math.random() * 1000);
 }
 
-function stopServer(slug) {
+async function stopServer(slug) {
   const p = state.projects.find(x => x.slug === slug);
   if (!p) return;
+
+  if (dataMode === 'live') {
+    p.status = 'offline';
+    render();
+    const res = await fetchAPI('/api/projects/' + slug + '/stop', { method: 'POST' });
+    if (res) {
+      showNotification(res.status === 'not_running' ? `${p.name} was not running` : `${p.name} stopping...`, 'info');
+      setTimeout(() => loadData(), 2000);
+    } else {
+      showNotification('Failed to stop ' + p.name, 'danger');
+      render();
+    }
+    return;
+  }
+
+  // Demo mode: existing mock behavior
   p.status = 'offline';
   p.uptime = 0;
   showNotification(`${p.name} stopped`, 'info');
@@ -1318,9 +1455,26 @@ function stopServer(slug) {
   render();
 }
 
-function restartServer(slug) {
+async function restartServer(slug) {
   const p = state.projects.find(x => x.slug === slug);
   if (!p) return;
+
+  if (dataMode === 'live') {
+    p.status = 'building';
+    render();
+    const res = await fetchAPI('/api/projects/' + slug + '/restart', { method: 'POST' });
+    if (res) {
+      showNotification(`${p.name} restarting...`, 'success');
+      setTimeout(() => loadData(), 3000);
+    } else {
+      p.status = 'offline';
+      showNotification('Failed to restart ' + p.name, 'danger');
+      render();
+    }
+    return;
+  }
+
+  // Demo mode: existing mock behavior
   p.status = 'building';
   render();
   setTimeout(() => {
@@ -1411,6 +1565,8 @@ function rollbackDeploy(historyId) {
 
 // ---- SIMULATED REFRESH ----
 function simulateRefresh() {
+  if (dataMode === 'live') { loadData(); return; }
+  // Demo mode: existing mock behavior
   state.projects.forEach(p => {
     if (p.status === 'online') {
       p.uptime += 10;
@@ -1475,6 +1631,7 @@ function render() {
   const app = document.getElementById('app');
   app.innerHTML = renderHeader() + renderTabs() + renderMain() + renderShortcutBar() + renderNotification() + renderConfirmDialog();
   attachEvents();
+  updateModeToggle();
 }
 
 function renderHeader() {
@@ -1503,6 +1660,10 @@ function renderHeader() {
         <div class="theme-switcher">
           ${THEMES.map(t => `<div class="theme-btn ${state.theme === t ? 'active' : ''}" data-theme="${t}" onclick="setTheme('${t}')" title="${THEME_NAMES[t]}"></div>`).join('')}
         </div>
+        <button class="mode-toggle${dataMode === 'live' ? ' live' : ''}" onclick="toggleDataMode()">
+          <span class="mode-icon">●</span>
+          <span class="mode-label">${dataMode === 'live' ? 'Live' : 'Demo'}</span>
+        </button>
       </div>
     </div>`;
 }
@@ -1871,7 +2032,7 @@ document.addEventListener('keydown', (e) => {
 // ---- INIT ----
 try { const saved = localStorage.getItem('ddv2-theme'); if (saved && THEMES.includes(saved)) state.theme = saved; } catch {}
 document.body.className = 'theme-' + state.theme;
-render();
+loadData();
 if (state.autoRefresh) startAutoRefresh();
 
 // ===== FAB: Keyboard Hints & Settings Gear =====
